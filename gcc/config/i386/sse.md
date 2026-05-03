@@ -31268,9 +31268,9 @@
 	   (match_operand 3 "const_0_to_255_operand")]
 	  UNSPEC_GF2P8AFFINEINV))]
   "TARGET_GFNI"
-  "@
-   gf2p8affineinvqb\t{%3, %2, %0| %0, %2, %3}
-   vgf2p8affineinvqb\t{%3, %2, %1, %0<mask_operand4>| %0<mask_operand4>, %1, %2, %3}"
+   "@
+    gf2p8affineinvqb\t{%3, %2, %0|%0, %2, %3}
+    vgf2p8affineinvqb\t{%3, %2, %1, %0<mask_operand4>|%0<mask_operand4>, %1, %2, %3}"
   [(set_attr "isa" "noavx,avx")
    (set_attr "addr" "gpr16,*")
    (set_attr "prefix_extra" "1")
@@ -31285,9 +31285,9 @@
 	   (match_operand 3 "const_0_to_255_operand")]
 	  UNSPEC_GF2P8AFFINE))]
   "TARGET_GFNI"
-  "@
-   gf2p8affineqb\t{%3, %2, %0| %0, %2, %3}
-   vgf2p8affineqb\t{%3, %2, %1, %0<mask_operand4>| %0<mask_operand4>, %1, %2, %3}"
+   "@
+    gf2p8affineqb\t{%3, %2, %0|%0, %2, %3}
+    vgf2p8affineqb\t{%3, %2, %1, %0<mask_operand4>|%0<mask_operand4>, %1, %2, %3}"
   [(set_attr "isa" "noavx,avx")
    (set_attr "addr" "gpr16,*")
    (set_attr "prefix_extra" "1")

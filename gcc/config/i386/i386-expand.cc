@@ -27955,6 +27955,102 @@ ix86_vgf2p8affine_shift_matrix (rtx src, rtx count, enum rtx_code code)
   return force_reg (mode, gen_rtx_CONST_VECTOR (mode, vec));
 }
 
+/* Expand a scalar bitreverse using GFNI to reverse bits within each byte.
+   Modes wider than a byte need an additional byte swap afterwards.  */
+
+void
+ix86_expand_bitreverse_scalar (rtx target, rtx src)
+{
+  machine_mode mode = GET_MODE (target);
+  rtx matrix;
+  rtx bytes;
+
+  src = force_reg (mode, src);
+
+  {
+    const uint64_t ma = 0x8040201008040201ULL;
+    rtx mat64;
+    rtx qwords;
+
+    mat64 = force_reg (DImode, gen_int_mode (ma, DImode));
+    qwords = gen_reg_rtx (V2DImode);
+    emit_move_insn (qwords,
+                    gen_rtx_VEC_CONCAT (V2DImode, mat64, CONST0_RTX (DImode)));
+    matrix = gen_reg_rtx (V16QImode);
+    emit_move_insn (matrix, lowpart_subreg (V16QImode, qwords, V2DImode));
+  }
+
+  switch (mode)
+    {
+    case QImode:
+      {
+        rtx words = gen_reg_rtx (V8HImode);
+        rtx qizext = gen_reg_rtx (HImode);
+
+        emit_insn (gen_zero_extendqihi2 (qizext, src));
+        emit_insn (gen_vec_setv8hi_0 (words, CONST0_RTX (V8HImode), qizext));
+        bytes = gen_reg_rtx (V16QImode);
+        emit_move_insn (bytes, lowpart_subreg (V16QImode, words, V8HImode));
+        emit_insn (gen_vgf2p8affineqb_v16qi (bytes, bytes, matrix,
+                                             const0_rtx));
+        emit_insn (gen_vec_extractv16qiqi (target, bytes, const0_rtx));
+        return;
+      }
+
+    case HImode:
+      {
+        rtx words = gen_reg_rtx (V8HImode);
+        rtx tmp = gen_reg_rtx (HImode);
+
+        emit_insn (gen_vec_setv8hi_0 (words, CONST0_RTX (V8HImode), src));
+        bytes = gen_reg_rtx (V16QImode);
+        emit_move_insn (bytes, lowpart_subreg (V16QImode, words, V8HImode));
+        emit_insn (gen_vgf2p8affineqb_v16qi (bytes, bytes, matrix,
+                                             const0_rtx));
+        emit_move_insn (words, lowpart_subreg (V8HImode, bytes, V16QImode));
+        emit_insn (gen_vec_extractv8hihi (tmp, words, const0_rtx));
+        emit_insn (gen_bswaphi2 (target, tmp));
+        return;
+      }
+
+    case SImode:
+      {
+        rtx dwords = gen_reg_rtx (V4SImode);
+        rtx tmp = gen_reg_rtx (SImode);
+
+        emit_insn (gen_vec_setv4si_0 (dwords, CONST0_RTX (V4SImode), src));
+        bytes = gen_reg_rtx (V16QImode);
+        emit_move_insn (bytes, lowpart_subreg (V16QImode, dwords, V4SImode));
+        emit_insn (gen_vgf2p8affineqb_v16qi (bytes, bytes, matrix,
+                                             const0_rtx));
+        emit_move_insn (dwords, lowpart_subreg (V4SImode, bytes, V16QImode));
+        emit_insn (gen_vec_extractv4sisi (tmp, dwords, const0_rtx));
+        emit_insn (gen_bswapsi2 (target, tmp));
+        return;
+      }
+
+    case DImode:
+      {
+        rtx qwords = gen_reg_rtx (V2DImode);
+        rtx tmp = gen_reg_rtx (DImode);
+
+        emit_move_insn (qwords,
+                        gen_rtx_VEC_CONCAT (V2DImode, src, CONST0_RTX (DImode)));
+        bytes = gen_reg_rtx (V16QImode);
+        emit_move_insn (bytes, lowpart_subreg (V16QImode, qwords, V2DImode));
+        emit_insn (gen_vgf2p8affineqb_v16qi (bytes, bytes, matrix,
+                                             const0_rtx));
+        emit_move_insn (qwords, lowpart_subreg (V2DImode, bytes, V16QImode));
+        emit_insn (gen_vec_extractv2didi (tmp, qwords, const0_rtx));
+        emit_insn (gen_bswapdi2 (target, tmp));
+        return;
+      }
+
+    default:
+      gcc_unreachable ();
+    }
+}
+
 /* Trunc a vector to a narrow vector, like v4di -> v4si.  */
 
 void
