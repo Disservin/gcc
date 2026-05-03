@@ -5778,13 +5778,19 @@
   [(set_attr "type" "clz")]
 )
 
-(define_insn "@aarch64_rbit<mode>"
+(define_insn "bitreverse<mode>2"
   [(set (match_operand:GPI 0 "register_operand" "=r")
 	(bitreverse:GPI (match_operand:GPI 1 "register_operand" "r")))]
   ""
   "rbit\\t%<w>0, %<w>1"
   [(set_attr "type" "rbit")]
 )
+
+(define_expand "@aarch64_rbit<mode>"
+  [(set (match_operand:GPI 0 "register_operand")
+	(bitreverse:GPI (match_operand:GPI 1 "register_operand")))]
+  ""
+  "")
 
 (define_expand "ffs<mode>2"
   [(match_operand:GPI 0 "register_operand")
