@@ -5788,34 +5788,7 @@
 (define_expand "bitreverse<mode>2"
   [(set (match_operand:GPI 0 "register_operand")
 	(bitreverse:GPI (match_operand:GPI 1 "register_operand")))]
-  ""
-  "")
-
-(define_expand "bitreverseqi2"
-  [(set (match_operand:QI 0 "register_operand")
-	(bitreverse:QI (match_operand:QI 1 "register_operand")))]
-  ""
-  {
-    rtx t = gen_reg_rtx (SImode);
-    emit_insn (gen_aarch64_rbitsi (t, gen_lowpart (SImode, operands[1])));
-    t = expand_simple_binop (SImode, LSHIFTRT, t, GEN_INT (24),
-			     NULL_RTX, false, OPTAB_DIRECT);
-    emit_move_insn (operands[0], gen_lowpart (QImode, t));
-    DONE;
-  })
-
-(define_expand "bitreversehi2"
-  [(set (match_operand:HI 0 "register_operand")
-	(bitreverse:HI (match_operand:HI 1 "register_operand")))]
-  ""
-  {
-    rtx t = gen_reg_rtx (SImode);
-    emit_insn (gen_aarch64_rbitsi (t, gen_lowpart (SImode, operands[1])));
-    t = expand_simple_binop (SImode, LSHIFTRT, t, GEN_INT (16),
-			     NULL_RTX, false, OPTAB_DIRECT);
-    emit_move_insn (operands[0], gen_lowpart (HImode, t));
-    DONE;
-  })
+)
 
 (define_expand "ffs<mode>2"
   [(match_operand:GPI 0 "register_operand")
